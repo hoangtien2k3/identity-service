@@ -1,4 +1,4 @@
-package com.hoangtien2k3.identityservice.entity;
+package com.hoangtien2k3.identityservice.dto.response;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -11,13 +11,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity
-@Table(name = "users")
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+public class UserResponse {
     String id;
-
     String username;
     String password;
     String firstname;

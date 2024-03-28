@@ -1,39 +1,54 @@
 package com.hoangtien2k3.identityservice.controller;
 
-import com.hoangtien2k3.identityservice.dto.UserCreationRequest;
-import com.hoangtien2k3.identityservice.dto.UserUpdateRequest;
+import com.hoangtien2k3.identityservice.config.Constants;
+import com.hoangtien2k3.identityservice.dto.response.ApiResponse;
+import com.hoangtien2k3.identityservice.dto.request.UserCreationRequest;
+import com.hoangtien2k3.identityservice.dto.request.UserUpdateRequest;
+import com.hoangtien2k3.identityservice.dto.response.UserResponse;
 import com.hoangtien2k3.identityservice.entity.User;
 import com.hoangtien2k3.identityservice.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    UserService userService;
 
     @PostMapping("/signup")
-    private User createUser(@RequestBody UserCreationRequest userCreationRequest) {
-        return userService.createRequest(userCreationRequest);
+    private ApiResponse<User> createUser(@RequestBody @Valid UserCreationRequest userCreationRequest) {
+        ApiResponse<User> apiResponse = new ApiResponse<>();
+
+        apiResponse.setMessage(Constants.SUCCESS);
+        apiResponse.setResult(userService.createRequest(userCreationRequest));
+
+        return apiResponse;
     }
 
     @GetMapping
-    private List<User> getAllUser() {
-        return userService.getAllUser();
+    private ApiResponse<Object> getAllUser() {
+        return ApiResponse.builder()
+                .code(200)
+                .message(Constants.SUCCESS)
+                .result(userService.getAllUser())
+                .build();
     }
 
     @GetMapping("/{id}")
-    private User getUserById(@PathVariable("id") String id) {
-        return userService.getUserById(id);
+    private ResponseEntity<Object> getUserById(@PathVariable("id") String id) {
+        return ResponseEntity.ok(userService.getUserById(id));
     }
 
     @PutMapping("/{id}")
-    private User updateUser(@RequestBody UserUpdateRequest userUpdateRequest,
-                            @PathVariable("id") String id) {
+    private UserResponse updateUser(@RequestBody UserUpdateRequest userUpdateRequest,
+                                    @PathVariable("id") String id) {
         return userService.updateUser(userUpdateRequest, id);
     }
 

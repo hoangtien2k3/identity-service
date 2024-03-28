@@ -1,30 +1,39 @@
 package com.hoangtien2k3.identityservice.service;
 
-import com.hoangtien2k3.identityservice.dto.UserCreationRequest;
-import com.hoangtien2k3.identityservice.dto.UserUpdateRequest;
+import com.hoangtien2k3.identityservice.dto.request.UserCreationRequest;
+import com.hoangtien2k3.identityservice.dto.request.UserUpdateRequest;
+import com.hoangtien2k3.identityservice.dto.response.UserResponse;
 import com.hoangtien2k3.identityservice.entity.User;
+import com.hoangtien2k3.identityservice.exception.payload.AppException;
+import com.hoangtien2k3.identityservice.exception.EnumConfig.ErrorCode;
+import com.hoangtien2k3.identityservice.mapper.UserMapper;
 import com.hoangtien2k3.identityservice.repository.UserRepository;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    UserRepository userRepository;
+    UserMapper userMapper;
 
     public User createRequest(UserCreationRequest userCreationRequest) {
+        if (userRepository.existsByUsername(userCreationRequest.getUsername())) {
+            throw new AppException(ErrorCode.USER_EXISTED);
+        }
 
-        User user = new User();
-        user.setUsername(userCreationRequest.getUsername());
-        user.setPassword(userCreationRequest.getPassword());
-        user.setFirstname(userCreationRequest.getFirstname());
-        user.setLastname(userCreationRequest.getLastname());
-        user.setDob(userCreationRequest.getDob());
+        User user = userMapper.toUser(userCreationRequest);
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        user.setPassword(passwordEncoder.encode(userCreationRequest.getPassword()));
 
         return userRepository.save(user);
     }
@@ -33,19 +42,17 @@ public class UserService {
         return userRepository.findAllUser();
     }
 
-    public User getUserById(String id) {
-        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("User Not Found Exception."));
+    public UserResponse getUserById(String id) {
+        return userMapper.toUserResponse(userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND)));
     }
 
-    public User updateUser(UserUpdateRequest userUpdateRequest, String id) {
-        User currentUser = getUserById(id);
+    public UserResponse updateUser(UserUpdateRequest userUpdateRequest, String id) {
+        User currentUser = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+        userMapper.updateUser(currentUser, userUpdateRequest);
 
-        currentUser.setPassword(userUpdateRequest.getPassword());
-        currentUser.setFirstname(userUpdateRequest.getFirstname());
-        currentUser.setLastname(userUpdateRequest.getLastname());
-        currentUser.setDob(userUpdateRequest.getDob());
-
-        return userRepository.save(currentUser);
+        return userMapper.toUserResponse(userRepository.save(currentUser));
     }
 
     public void deleteUserById(String id) {
