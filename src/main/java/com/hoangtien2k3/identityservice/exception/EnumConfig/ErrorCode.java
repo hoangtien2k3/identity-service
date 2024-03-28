@@ -13,7 +13,8 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR(500, "Internal Server Error"),
     USERNAME_INVALID(400, "Username must be at least 3 character"),
     PASSWORD_INVALID(400, "Password must be at least 8 character"),
-    USER_NOT_EXITSTED(404, "User not exitsted");
+    USER_NOT_EXITSTED(404, "User not exitsted"),
+    UNAUTHENTICATED(401, "Unauthenticated");
 
     private final int code;
     private final String message;
