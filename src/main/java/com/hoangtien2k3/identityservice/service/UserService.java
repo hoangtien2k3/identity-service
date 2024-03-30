@@ -4,6 +4,7 @@ import com.hoangtien2k3.identityservice.dto.request.UserCreationRequest;
 import com.hoangtien2k3.identityservice.dto.request.UserUpdateRequest;
 import com.hoangtien2k3.identityservice.dto.response.UserResponse;
 import com.hoangtien2k3.identityservice.entity.User;
+import com.hoangtien2k3.identityservice.enums.Role;
 import com.hoangtien2k3.identityservice.exception.payload.AppException;
 import com.hoangtien2k3.identityservice.exception.EnumConfig.ErrorCode;
 import com.hoangtien2k3.identityservice.mapper.UserMapper;
@@ -16,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -25,17 +27,22 @@ public class UserService {
 
     UserRepository userRepository;
     UserMapper userMapper;
+    PasswordEncoder passwordEncoder;
 
-    public User createRequest(UserCreationRequest userCreationRequest) {
+    public UserResponse createRequest(UserCreationRequest userCreationRequest) {
         if (userRepository.existsByUsername(userCreationRequest.getUsername())) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
 
         User user = userMapper.toUser(userCreationRequest);
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         user.setPassword(passwordEncoder.encode(userCreationRequest.getPassword()));
 
-        return userRepository.save(user);
+        HashSet<String> role = new HashSet<>();
+        role.add(Role.USER.name());
+
+        user.setRoles(role);
+
+        return userMapper.toUserResponse(userRepository.save(user));
     }
 
     public List<User> getAllUser() {

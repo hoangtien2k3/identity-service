@@ -1,19 +1,21 @@
 package com.hoangtien2k3.identityservice.controller;
 
-import com.hoangtien2k3.identityservice.config.Constants;
+import com.hoangtien2k3.identityservice.constant.Constants;
 import com.hoangtien2k3.identityservice.dto.response.ApiResponse;
 import com.hoangtien2k3.identityservice.dto.request.UserCreationRequest;
 import com.hoangtien2k3.identityservice.dto.request.UserUpdateRequest;
 import com.hoangtien2k3.identityservice.dto.response.UserResponse;
-import com.hoangtien2k3.identityservice.entity.User;
 import com.hoangtien2k3.identityservice.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RestController
@@ -23,8 +25,8 @@ public class UserController {
     UserService userService;
 
     @PostMapping("/signup")
-    private ApiResponse<User> createUser(@RequestBody @Valid UserCreationRequest userCreationRequest) {
-        ApiResponse<User> apiResponse = new ApiResponse<>();
+    private ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest userCreationRequest) {
+        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
 
         apiResponse.setMessage(Constants.SUCCESS);
         apiResponse.setResult(userService.createRequest(userCreationRequest));
@@ -34,6 +36,15 @@ public class UserController {
 
     @GetMapping
     private ApiResponse<Object> getAllUser() {
+
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        log.info("Username: {}", authentication.getName());
+        authentication.getAuthorities().forEach(grantedAuthority -> {
+            log.info("Role: {}", grantedAuthority.getAuthority());
+        });
+
+
         return ApiResponse.builder()
                 .code(200)
                 .message(Constants.SUCCESS)

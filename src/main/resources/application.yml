@@ -4,7 +4,7 @@ server:
     context-path: /identity
 
 spring:
-  datasource:
+  datasource: 
     url: "jdbc:mysql://localhost:3307/identity_service"
     username: root
     password: 12042003
@@ -12,3 +12,9 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+jwt:
+  signerKey: "QpOD7PxEqUCWRB8BU6e+Hv29TQLUuG+0sxxSJZWAPGhrVVszWZU2hT5RhoQTvhgv"
+
+
+
