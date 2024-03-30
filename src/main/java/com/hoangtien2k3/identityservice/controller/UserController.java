@@ -5,15 +5,17 @@ import com.hoangtien2k3.identityservice.dto.response.ApiResponse;
 import com.hoangtien2k3.identityservice.dto.request.UserCreationRequest;
 import com.hoangtien2k3.identityservice.dto.request.UserUpdateRequest;
 import com.hoangtien2k3.identityservice.dto.response.UserResponse;
+import com.hoangtien2k3.identityservice.entity.User;
 import com.hoangtien2k3.identityservice.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -35,7 +37,7 @@ public class UserController {
     }
 
     @GetMapping
-    private ApiResponse<Object> getAllUser() {
+    private ApiResponse<List<UserResponse>> getAllUser() {
 
         var authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -44,8 +46,7 @@ public class UserController {
             log.info("Role: {}", grantedAuthority.getAuthority());
         });
 
-
-        return ApiResponse.builder()
+        return ApiResponse.<List<UserResponse>>builder()
                 .code(200)
                 .message(Constants.SUCCESS)
                 .result(userService.getAllUser())
@@ -53,14 +54,28 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    private ResponseEntity<Object> getUserById(@PathVariable("id") String id) {
-        return ResponseEntity.ok(userService.getUserById(id));
+    private ApiResponse<UserResponse> getUserById(@PathVariable("id") String id) {
+        return ApiResponse.<UserResponse>builder()
+                .code(200)
+                .message(Constants.SUCCESS)
+                .result(userService.getUserById(id))
+                .build();
+    }
+
+    @GetMapping("/myInfo")
+    private ApiResponse<UserResponse> getUserMyInfo() {
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.getUserMyInfo())
+                .build();
     }
 
     @PutMapping("/{id}")
-    private UserResponse updateUser(@RequestBody UserUpdateRequest userUpdateRequest,
+    private ApiResponse<UserResponse> updateUser(@RequestBody UserUpdateRequest userUpdateRequest,
                                     @PathVariable("id") String id) {
-        return userService.updateUser(userUpdateRequest, id);
+        return ApiResponse.<UserResponse>builder()
+                .message(Constants.SUCCESS)
+                .result(userService.updateUser(userUpdateRequest, id))
+                .build();
     }
 
     @DeleteMapping("/{id}")
