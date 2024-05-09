@@ -1,44 +1,71 @@
 package com.hoangtien2k3.identityservice.configuration;
 
-import com.hoangtien2k3.identityservice.entity.User;
-import com.hoangtien2k3.identityservice.enums.Role;
-import com.hoangtien2k3.identityservice.repository.UserRepository;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.HashSet;
+
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.HashSet;
+import com.hoangtien2k3.identityservice.constant.PredefinedRole;
+import com.hoangtien2k3.identityservice.entity.Role;
+import com.hoangtien2k3.identityservice.entity.User;
+import com.hoangtien2k3.identityservice.repository.RoleRepository;
+import com.hoangtien2k3.identityservice.repository.UserRepository;
 
-@Slf4j
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
+
 @Configuration
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class ApplicationInitConfig {
 
     PasswordEncoder passwordEncoder;
 
+    @NonFinal
+    static final String ADMIN_USER_NAME = "admin";
+
+    @NonFinal
+    static final String ADMIN_PASSWORD = "admin";
+
     @Bean
-    ApplicationRunner applicationRunner(UserRepository repository) {
+    @ConditionalOnProperty(
+            prefix = "spring",
+            value = "datasource.driverClassName",
+            havingValue = "com.mysql.cj.jdbc.Driver")
+    ApplicationRunner applicationRunner(UserRepository userRepository, RoleRepository roleRepository) {
+        log.info("Initializing application.....");
         return args -> {
-            if (repository.findByUsername("admin").isEmpty()) {
-                var role = new HashSet<String>();
-                role.add(Role.ADMIN.name());
+            if (userRepository.findByUsername(ADMIN_USER_NAME).isEmpty()) {
+                roleRepository.save(Role.builder()
+                        .name(PredefinedRole.USER_ROLE)
+                        .description("User role")
+                        .build());
+
+                Role adminRole = roleRepository.save(Role.builder()
+                        .name(PredefinedRole.ADMIN_ROLE)
+                        .description("Admin role")
+                        .build());
+
+                var roles = new HashSet<Role>();
+                roles.add(adminRole);
+
                 User user = User.builder()
-                        .username("admin")
-                        .password(passwordEncoder.encode("admin"))
-                        .roles(role)
+                        .username(ADMIN_USER_NAME)
+                        .password(passwordEncoder.encode(ADMIN_PASSWORD))
+                        .roles(roles)
                         .build();
 
-                repository.save(user);
-                log.warn("admin user has bean create with default password: admin, please change it");
+                userRepository.save(user);
+                log.warn("admin user has been created with default password: admin, please change it");
             }
+            log.info("Application initialization completed .....");
         };
     }
-
 }
