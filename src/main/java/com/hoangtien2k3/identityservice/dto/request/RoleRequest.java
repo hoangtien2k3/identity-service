@@ -1,5 +1,7 @@
 package com.hoangtien2k3.identityservice.dto.request;
 
+import java.util.Set;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -8,6 +10,8 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class IntrospectRequest {
-    String token;
+public class RoleRequest {
+    String name;
+    String description;
+    Set<String> permissions;
 }
